@@ -17,6 +17,7 @@ type DataRepo struct {
 	Placetype string
 	Country   string
 	Region    string
+	Filter    string // PLEASE DON'T CALL ME 'Filter' ...
 }
 
 func NewDataRepoFromPath(path string) (*DataRepo, error) {
@@ -39,7 +40,7 @@ func NewDataRepoFromString(repo string) (*DataRepo, error) {
 		return nil, errors.New("Invalid repo name (too short)")
 	}
 
-	if len(parts) > 5 {
+	if len(parts) > 6 {
 		return nil, errors.New("Invalid repo name (too long)")
 	}
 
@@ -49,6 +50,7 @@ func NewDataRepoFromString(repo string) (*DataRepo, error) {
 		Placetype: "",
 		Country:   "",
 		Region:    "",
+		Filter:    "",
 	}
 
 	r.Source = parts[0]
@@ -95,6 +97,12 @@ func NewDataRepoFromString(repo string) (*DataRepo, error) {
 		r.Region = region
 	}
 
+	if len(parts) > 5 {
+
+		filter := parts[5]
+		r.Filter = filter
+	}
+
 	return &r, nil
 }
 
@@ -115,6 +123,37 @@ func (r *DataRepo) String() string {
 
 	if r.Region != "" {
 		parts = append(parts, r.Region)
+	}
+
+	if r.Filter != "" {
+		parts = append(parts, r.Filter)
+	}
+
+	return strings.Join(parts, "-")
+}
+
+func (r *DataRepo) MetafileNameTemplate() string {
+
+	parts := make([]string, 0)
+
+	parts = append(parts, r.Source)
+
+	if r.Placetype == "" {
+		parts = append(parts, "%s")
+	} else {
+		parts = append(parts, r.Placetype)
+	}
+
+	if r.Country != "" {
+		parts = append(parts, r.Country)
+	}
+
+	if r.Region != "" {
+		parts = append(parts, r.Region)
+	}
+
+	if r.Filter != "" {
+		parts = append(parts, r.Filter)
 	}
 
 	return strings.Join(parts, "-")
