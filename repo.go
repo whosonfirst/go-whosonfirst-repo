@@ -136,7 +136,14 @@ func (r *DataRepo) MetafileNameTemplate() string {
 
 	parts := make([]string, 0)
 
-	parts = append(parts, r.Source)
+	// unfortunately this is still-necessary legacy code...
+	// (20170726/thisisaaronland)
+
+	if r.Source == "whosonfirst" {
+		parts = append(parts, "wof")
+	} else {
+		parts = append(parts, r.Source)
+	}
 
 	if r.Placetype == "" {
 		parts = append(parts, "%s")
@@ -155,6 +162,44 @@ func (r *DataRepo) MetafileNameTemplate() string {
 	if r.Filter != "" {
 		parts = append(parts, r.Filter)
 	}
+
+	parts = append(parts, "latest.csv")
+	return strings.Join(parts, "-")
+}
+
+func (r *DataRepo) ConcordancesNameTemplate() string {
+
+	parts := make([]string, 0)
+
+	// unfortunately this is still-necessary legacy code...
+	// (20170726/thisisaaronland)
+
+	if r.Source == "whosonfirst" {
+		parts = append(parts, "wof")
+	} else {
+		parts = append(parts, r.Source)
+	}
+
+	if r.Placetype == "" {
+		parts = append(parts, "%s")
+	} else {
+		parts = append(parts, r.Placetype)
+	}
+
+	if r.Country != "" {
+		parts = append(parts, r.Country)
+	}
+
+	if r.Region != "" {
+		parts = append(parts, r.Region)
+	}
+
+	if r.Filter != "" {
+		parts = append(parts, r.Filter)
+	}
+
+	parts = append(parts, "concordances")
+	parts = append(parts, "latest.csv")
 
 	return strings.Join(parts, "-")
 }
