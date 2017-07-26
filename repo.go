@@ -178,6 +178,13 @@ func (r *DataRepo) MetaFilenameTemplate() string {
 		parts = append(parts, r.Filter)
 	}
 
+	// unfortunately this is still-necessary legacy code...
+	// (20170726/thisisaaronland)
+
+	if r.Source != "whosonfirst" {
+		parts = append(parts, "meta")
+	}
+
 	parts = append(parts, "latest.csv")
 	return strings.Join(parts, "-")
 }
