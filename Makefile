@@ -17,7 +17,6 @@ build:	fmt bin
 
 deps:   rmdeps
 	@GOPATH=$(GOPATH) go get -u "github.com/whosonfirst/go-whosonfirst-placetypes"
-	@GOPATH=$(GOPATH) go get -u "github.com/whosonfirst/warning"
 
 vendor-deps: rmdeps deps
 	if test ! -d vendor; then mkdir vendor; fi
