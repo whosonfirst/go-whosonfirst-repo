@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/whosonfirst/go-whosonfirst-placetypes"
+	"github.com/whosonfirst/warning"
 	"path/filepath"
 	"strings"
 )
@@ -81,7 +82,7 @@ func NewDataRepoFromString(repo string) (*DataRepo, error) {
 		placetype := parts[2]
 
 		if !placetypes.IsValidPlacetype(placetype) {
-			return nil, errors.New("Invalid placetype")
+			return nil, warning.New("Invalid placetype")
 		}
 
 		r.Placetype = placetype
