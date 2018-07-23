@@ -22,17 +22,21 @@ type DataRepo struct {
 }
 
 type FilenameOptions struct {
-	Placetype string
+	Placetype        string
 	StrictPlacetypes bool
-	Dated     bool
+	Dated            bool
+	Suffix           string
+	Extension        string
 }
 
 func DefaultFilenameOptions() *FilenameOptions {
 
 	o := FilenameOptions{
-		Placetype: "",
-		Dated:     false,
+		Placetype:        "",
+		Dated:            false,
 		StrictPlacetypes: false,
+		Suffix:           "latest",
+		Extension:        "",
 	}
 
 	return &o
@@ -153,90 +157,47 @@ func (r *DataRepo) String() string {
 
 func (r *DataRepo) MetaFilename(opts *FilenameOptions) string {
 
-	if opts.Placetype == "" {
-		if r.Placetype == "" {
-			opts.Placetype = "all"
-		} else {
-			opts.Placetype = r.Placetype
-		}
-	}
-
-	// not sure the template shouldn't just be rolled in here...
-	template := r.MetaFilenameTemplate()
-
-	return fmt.Sprintf(template, opts.Placetype)
-}
-
-func (r *DataRepo) MetaFilenameTemplate() string {
-
-	parts := make([]string, 0)
-
-	// unfortunately this is still-necessary legacy code...
-	// (20170726/thisisaaronland)
-
-	if r.Source == "whosonfirst" {
-		parts = append(parts, "wof")
-	} else {
-		parts = append(parts, r.Source)
-	}
-
-	parts = append(parts, "%s")
-
-	if r.Country != "" {
-		parts = append(parts, r.Country)
-	}
-
-	if r.Region != "" {
-		parts = append(parts, r.Region)
-	}
-
-	if r.Filter != "" {
-		parts = append(parts, r.Filter)
-	}
-
-	// unfortunately this is still-necessary legacy code - this
-	// should be removed when we stop including meta/* files in
-	// the WOF repos... (20170726/thisisaaronland)
-
-	if r.Source == "whosonfirst" {
-		parts = append(parts, "latest.csv")
-	} else {
-		parts = append(parts, "meta.csv")
-	}
-
-	return strings.Join(parts, "-")
+	opts.Extension = "csv"
+	return r.filename(opts)
 }
 
 func (r *DataRepo) ConcordancesFilename(opts *FilenameOptions) string {
 
-	if opts.Placetype == "" {
-		if r.Placetype == "" {
-			opts.Placetype = "all"
-		} else {
-			opts.Placetype = r.Placetype
-		}
-	}
+	opts.Suffix = "concordances"
+	opts.Extension = "csv"
 
-	// not sure the template shouldn't just be rolled in here...
-	template := r.ConcordancesFilenameTemplate()
-
-	return fmt.Sprintf(template, opts.Placetype)
+	return r.filename(opts)
 }
 
-func (r *DataRepo) ConcordancesFilenameTemplate() string {
+func (r *DataRepo) BundleFilename(opts *FilenameOptions) string {
+
+	return r.filename(opts)
+}
+
+func (r *DataRepo) SQLiteFilename(opts *FilenameOptions) string {
+
+	opts.Extension = "db"
+	return r.filename(opts)
+}
+
+func (r *DataRepo) filename(opts *FilenameOptions) string {
+
+	// something something something... what?
+
+	/*
+		if opts.Placetype == "" {
+			if r.Placetype == "" {
+				opts.Placetype = "all"
+			} else {
+				opts.Placetype = r.Placetype
+			}
+		}
+	*/
 
 	parts := make([]string, 0)
 
-	// unfortunately this is still-necessary legacy code...
-	// (20170726/thisisaaronland)
-
-	if r.Source == "whosonfirst" {
-		parts = append(parts, "wof")
-	} else {
-		parts = append(parts, r.Source)
-	}
-
-	parts = append(parts, "%s")
+	parts = append(parts, r.Source)
+	parts = append(parts, r.Role)
 
 	if r.Country != "" {
 		parts = append(parts, r.Country)
@@ -250,16 +211,15 @@ func (r *DataRepo) ConcordancesFilenameTemplate() string {
 		parts = append(parts, r.Filter)
 	}
 
-	// unfortunately this is still-necessary legacy code - this
-	// should be removed when we stop including meta/* files in
-	// the WOF repos... (20170726/thisisaaronland)
-
-	if r.Source == "whosonfirst" {
-		parts = append(parts, "concordances")
-		parts = append(parts, "latest.csv")
-	} else {
-		parts = append(parts, "concordances.csv")
+	if opts.Suffix != "" {
+		parts = append(parts, opts.Suffix)
 	}
 
-	return strings.Join(parts, "-")
+	fname := strings.Join(parts, "-")
+
+	if opts.Extension != "" {
+		fname = fmt.Sprintf("%s.%s", fname, opts.Extension)
+	}
+
+	return fname
 }
