@@ -3,9 +3,11 @@ package repo
 import (
 	"errors"
 	"fmt"
-	"github.com/whosonfirst/go-whosonfirst-placetypes"
+	_ "github.com/whosonfirst/go-whosonfirst-placetypes"
+	_ "log"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 type Repo interface {
@@ -22,27 +24,25 @@ type DataRepo struct {
 }
 
 type FilenameOptions struct {
-	Placetype        string
-	StrictPlacetypes bool
-	Dated            bool
-	Suffix           string
-	Extension        string
+	Placetype string
+	Suffix    string
+	Extension string
+	OldSkool  bool
 }
 
 func DefaultFilenameOptions() *FilenameOptions {
 
 	o := FilenameOptions{
-		Placetype:        "",
-		Dated:            false,
-		StrictPlacetypes: false,
-		Suffix:           "latest",
-		Extension:        "",
+		Placetype: "",
+		Suffix:    "latest",
+		Extension: "",
+		OldSkool:  false,
 	}
 
 	return &o
 }
 
-func NewDataRepoFromPath(path string, opts *FilenameOptions) (*DataRepo, error) {
+func NewDataRepoFromPath(path string) (*DataRepo, error) {
 
 	abs_path, err := filepath.Abs(path)
 
@@ -52,10 +52,10 @@ func NewDataRepoFromPath(path string, opts *FilenameOptions) (*DataRepo, error) 
 
 	repo := filepath.Base(abs_path)
 
-	return NewDataRepoFromString(repo, opts)
+	return NewDataRepoFromString(repo)
 }
 
-func NewDataRepoFromString(repo string, opts *FilenameOptions) (*DataRepo, error) {
+func NewDataRepoFromString(repo string) (*DataRepo, error) {
 
 	parts := strings.Split(repo, "-")
 
@@ -87,9 +87,11 @@ func NewDataRepoFromString(repo string, opts *FilenameOptions) (*DataRepo, error
 
 		placetype := parts[2]
 
-		if opts.StrictPlacetypes && !placetypes.IsValidPlacetype(placetype) {
-			return nil, errors.New("Invalid placetype")
-		}
+		/*
+			if opts.StrictPlacetypes && !placetypes.IsValidPlacetype(placetype) {
+				return nil, errors.New("Invalid placetype")
+			}
+		*/
 
 		r.Placetype = placetype
 	}
@@ -171,6 +173,7 @@ func (r *DataRepo) ConcordancesFilename(opts *FilenameOptions) string {
 
 func (r *DataRepo) BundleFilename(opts *FilenameOptions) string {
 
+	opts.Extension = ""
 	return r.filename(opts)
 }
 
@@ -182,22 +185,24 @@ func (r *DataRepo) SQLiteFilename(opts *FilenameOptions) string {
 
 func (r *DataRepo) filename(opts *FilenameOptions) string {
 
-	// something something something... what?
-
-	/*
-		if opts.Placetype == "" {
-			if r.Placetype == "" {
-				opts.Placetype = "all"
-			} else {
-				opts.Placetype = r.Placetype
-			}
-		}
-	*/
-
 	parts := make([]string, 0)
 
-	parts = append(parts, r.Source)
-	parts = append(parts, r.Role)
+	if r.Source == "whosonfirst" && opts.OldSkool {
+
+		parts = append(parts, "wof")
+	} else {
+
+		parts = append(parts, r.Source)
+		parts = append(parts, r.Role)
+	}
+
+	if r.Placetype != "" {
+		parts = append(parts, r.Placetype)
+	}
+
+	if opts.Placetype != "" {
+		parts = append(parts, opts.Placetype)
+	}
 
 	if r.Country != "" {
 		parts = append(parts, r.Country)
@@ -212,7 +217,16 @@ func (r *DataRepo) filename(opts *FilenameOptions) string {
 	}
 
 	if opts.Suffix != "" {
-		parts = append(parts, opts.Suffix)
+
+		suffix := opts.Suffix
+
+		if opts.Suffix == "{DATED}" {
+
+			now := time.Now()
+			suffix = now.Format("20060102")
+		}
+
+		parts = append(parts, suffix)
 	}
 
 	fname := strings.Join(parts, "-")
