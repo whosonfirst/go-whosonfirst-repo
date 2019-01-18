@@ -2,6 +2,8 @@ package repo
 
 import (
 	"fmt"
+	"strings"
+	"time"
 )
 
 type CustomRepo struct {
@@ -55,7 +57,24 @@ func (r *CustomRepo) SQLiteFilename(opts *FilenameOptions) string {
 
 func (r *CustomRepo) filename(opts *FilenameOptions) string {
 
-	fname := r.name
+	parts := []string{
+		r.name,
+	}
+
+	if opts.Suffix != "" {
+
+		suffix := opts.Suffix
+
+		if opts.Suffix == "{DATED}" {
+
+			now := time.Now()
+			suffix = now.Format("20060102")
+		}
+
+		parts = append(parts, suffix)
+	}
+
+	fname := strings.Join(parts, "-")
 
 	if opts.Extension != "" {
 		fname = fmt.Sprintf("%s.%s", fname, opts.Extension)
